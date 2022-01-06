@@ -1,6 +1,6 @@
 ## Dialogs
 
-> Install-Package Microsoft.Bot.Builder.Dialogs -Version 4.15.0> 
+> Install-Package Microsoft.Bot.Builder.Dialogs
 
 ```csharp
 // Create Bots/DialogBot.cs
@@ -33,7 +33,7 @@ public static async Task Run(this Dialog dialog, ITurnContext turnContext, IStat
     var dialogSet = new DialogSet(accessor);
     // ...
     
-    // create dialogContext to interacte with dialogSet
+    // create dialogContext to interact with dialogSet
     // dialog context include : current TurnContext, Parent dialog & dialog (provides a method for preserving information within a dialog)
     var dialogContext = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
     
@@ -64,6 +64,8 @@ public class GreetingDialog : ComponentDialog
     }
 
     // Simple pattern for simple usage
+    // Setup waterfall dialog to establish all the steps that contains what methods will get called in what order within the flow
+
     private void InitWaterfallDialog()
         {
             // Create waterfall steps
@@ -118,6 +120,9 @@ public class MainDialog : ComponentDialog
 
 // --> What else to make it work (+1) 🤑
 // Go ahead to startup.cs and do your business
+
+services.AddTransient<IBot, Bots.DialogBot<MainDialog>>();
+services.AddSingleton<MainDialog>();
 
 ```
 

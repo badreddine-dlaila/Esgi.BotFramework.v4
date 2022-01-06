@@ -3,6 +3,8 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.15.0
 
+using DialogBot.Dialogs;
+using DialogBot.Bots;
 using DialogBot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,10 +38,11 @@ namespace DialogBot
             // Create the Bot Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
-            // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, Bots.EchoBot>();
-
             ConfigureState(services);
+            ConfigureDialogs(services);
+
+            // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
+            services.AddTransient<IBot, DialogBot<MainDialog>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -60,7 +63,7 @@ namespace DialogBot
                     endpoints.MapControllers();
                 });
 
-            // app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
         }
 
         private void ConfigureState(IServiceCollection services)
@@ -80,7 +83,12 @@ namespace DialogBot
             services.AddSingleton<ConversationState>();
 
             // Create an instance of the state service 
-            services.AddSingleton<StateService>();
+            services.AddSingleton<BotStateService>();
+        }
+
+        private static void ConfigureDialogs(IServiceCollection services)
+        {
+            services.AddSingleton<MainDialog>();
         }
     }
 }
