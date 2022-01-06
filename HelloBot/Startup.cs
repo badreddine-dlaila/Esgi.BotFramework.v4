@@ -3,10 +3,12 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.15.0
 
+using HelloBot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Azure.Blobs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +33,10 @@ namespace HelloBot
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, Bots.EchoBot>();
+            //services.AddTransient<IBot, Bots.EchoBot>();
+            services.AddTransient<IBot, Bots.GreetingBot>();
+
+            ConfigureState(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,6 +56,27 @@ namespace HelloBot
             app.UseWebSockets();
             //app.UseHttpsRedirection();
             app.UseMvc();
+        }
+
+        private void ConfigureState(IServiceCollection services)
+        {
+            // Create the storage we'll be using for User and Conversation state.(Memory is great for testing purposes)
+            services.AddSingleton<IStorage, MemoryStorage>();
+
+            // For production and permanent storage we can use Azure blob storage as IStorageProvider
+            var connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
+            const string container = "mystatedata";
+            var blobsStorage = new BlobsStorage(connectionString, container);
+            services.AddSingleton<IStorage>(blobsStorage);
+
+            // User state 
+            services.AddSingleton<UserState>();
+
+            // Conversation state 
+            services.AddSingleton<ConversationState>();
+
+            // Create an instance of the state service 
+            services.AddSingleton<StateService>();
         }
     }
 }
