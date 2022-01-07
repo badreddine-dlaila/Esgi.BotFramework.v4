@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DialogBot.Models;
 using DialogBot.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Schema;
 
 namespace DialogBot.Dialogs
 {
@@ -25,13 +27,15 @@ namespace DialogBot.Dialogs
             // Create waterfall steps (waterfall = back and forth template to utilize for conversation)
             var waterfallSteps = new WaterfallStep[]
             {
-                InitialStep , // <-- waterfall step (method order is important)
+                InitialStep ,       // <-- waterfall step (method order is important)
+                //GithubSignInStep,
                 FinalStep
             };
 
             // Add named dialogs
             AddDialog(new WaterfallDialog($"{nameof(GreetingDialog)}.mainFlow", waterfallSteps)); // <-- subDialog1
             AddDialog(new TextPrompt($"{nameof(GreetingDialog)}.name"));                          // <-- subDialog2  
+            AddDialog(new TextPrompt($"{nameof(GreetingDialog)}.signin"));                        // <-- subDialog3  
 
             // set the starting dialog
             InitialDialogId = $"{nameof(GreetingDialog)}.mainFlow";
@@ -49,6 +53,23 @@ namespace DialogBot.Dialogs
             // If no user name found, kick start a text prompt dialog
             var promptOptions = new PromptOptions { Prompt = MessageFactory.Text("What is your name 😺 ?") };
             return await stepContext.PromptAsync($"{nameof(GreetingDialog)}.name", promptOptions, cancellationToken);
+        }
+
+        private static async Task<DialogTurnResult> GithubSignInStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            const string signinLink = "https://github.com/login/oauth/authorize" +
+                                      "?client_id=0e34b593be4881da90ab&scope=user%20repo" +
+                                      "&redirect_uri=https://localhost:3979/api/oauth/callback";
+            var signinCard = new SigninCard
+            {
+                Text = "Please sign-in to Github 🤖",
+                Buttons = new List<CardAction> { new (ActionTypes.Signin, "Sign-in", value: signinLink) },
+            };
+
+            await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(signinCard.ToAttachment()), cancellationToken);
+
+            var promptOptions = new PromptOptions { Prompt = new Activity { Type = ActivityTypes.Message } };
+            return await stepContext.PromptAsync($"{nameof(GreetingDialog)}.signin", promptOptions, cancellationToken);
         }
 
         private async Task<DialogTurnResult> FinalStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)

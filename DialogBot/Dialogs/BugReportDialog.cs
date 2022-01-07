@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -189,6 +191,12 @@ namespace DialogBot.Dialogs
             var summaryCardTemplateJson = await streamReader.ReadToEndAsync();
             var template = new AdaptiveCardTemplate(summaryCardTemplateJson);
 
+            // Random md5
+            using var md5 = MD5.Create();
+            var hash = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(userProfile.Name)))
+                .Replace("-", string.Empty)
+                .ToLower();
+
             // Serializable object as template data
             var cardData = new
             {
@@ -228,7 +236,7 @@ namespace DialogBot.Dialogs
                         correlation_id = report.CorrelationId,
                         creation_date = $"{report.DateTime.ToUniversalTime():s}Z",
                         bug = report.Bug,
-                        custom_fields = new []
+                        custom_fields = new[]
                         {
                             new
                             {
@@ -245,7 +253,7 @@ namespace DialogBot.Dialogs
                 creator = new
                 {
                     name = userProfile.Name,
-                    profileImage = "https://www.gravatar.com/avatar/ddc3ed4d9e5b92112753d7c2659bc822?d=retro"
+                    profileImage = $"https://www.gravatar.com/avatar/{hash}?d=retro"
                 },
                 createdUtc = DateTime.UtcNow,
                 viewUrl = "https://github.com/hankhank10/fakeface",

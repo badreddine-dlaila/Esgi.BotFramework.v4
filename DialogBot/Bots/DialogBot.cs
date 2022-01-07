@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using DialogBot.Helpers;
@@ -17,10 +18,17 @@ namespace DialogBot.Bots
         private readonly T                     _dialog;
         private readonly ILogger<DialogBot<T>> _logger;
 
-        public DialogBot(BotStateService stateService, T dialog, ILogger<DialogBot<T>> logger)
+        // Dependency injected dictionary for storing ConversationReference objects used in NotifyController to proactively message users
+        private readonly ConcurrentDictionary<string, ConversationReference> _conversationReferences;
+
+        public DialogBot(BotStateService stateService,
+                         T dialog,
+                         ConcurrentDictionary<string, ConversationReference> conversationReferences,
+                         ILogger<DialogBot<T>> logger)
         {
             _stateService = stateService ?? throw new ArgumentNullException(nameof(stateService));
             _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
+            _conversationReferences = conversationReferences ?? throw new ArgumentNullException(nameof(conversationReferences));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -36,6 +44,9 @@ namespace DialogBot.Bots
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Running dialog with Message Activity.");
+
+            var conversationReference = (turnContext.Activity as Activity)?.GetConversationReference();
+            _conversationReferences.AddOrUpdate(conversationReference?.User.Id, conversationReference, (key, newValue) => conversationReference);
 
             var activity = turnContext.Activity;
             if (string.IsNullOrWhiteSpace(activity.Text) && activity.Value != null)
