@@ -1,11 +1,50 @@
-{
+﻿{
   "type": "AdaptiveCard",
   "body": [
+    {
+      "type": "Container",
+      "style": "default",
+      "spacing": "Large",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "size": "auto",
+                  "weight": "Bolder",
+                  "text": "**${title}**",
+                  "wrap": true,
+                  "style": "heading"
+                }
+              ],
+              "width": "stretch"
+            },
+            {
+              "type": "Column",
+              "items": [
+                {
+                  "type": "Image",
+                  "url": "https://adaptivecards.io/content/pending.png",
+                  "altText": "${status}",
+                  "height": "30px"
+                }
+              ],
+              "width": "auto"
+            }
+          ]
+        }
+      ],
+      "bleed": true
+    },
     {
       "type": "TextBlock",
       "size": "Medium",
       "weight": "Bolder",
-      "text": "${title}",
+      "text": "🔖🚨 Summary",
       "wrap": true,
       "style": "heading"
     },

@@ -20,6 +20,7 @@ namespace DialogBot.Models
     {
         public Guid     Id              { get; } = Guid.NewGuid();
         public DateTime DateTime        { get; } = DateTime.UtcNow;
+        public string   Title           { get; set; }
         public string   Description     { get; set; }
         public DateTime CallbackTime    { get; set; }
         public string   PhoneNumber     { get; set; }

@@ -33,6 +33,7 @@ namespace DialogBot.Dialogs
             // Create waterfall steps
             var waterFallSteps = new WaterfallStep[]
             {
+                TitleStep,          // TextPrompt
                 DescriptionStep,    // TextPrompt
                 CallbackStep,       // DateTimePrompt 🚨
                 PhoneNumberStep,    // TextPrompt https://regex101.com/r/0kpBet/1 🚨
@@ -43,6 +44,7 @@ namespace DialogBot.Dialogs
 
             // Add named dialogs$
             AddDialog(new WaterfallDialog($"{nameof(BugReportDialog)}.mainFlow", waterFallSteps));
+            AddDialog(new TextPrompt($"{nameof(BugReportDialog)}.title"));
             AddDialog(new TextPrompt($"{nameof(BugReportDialog)}.description"));
             AddDialog(new DateTimePrompt($"{nameof(BugReportDialog)}.callbackTime", ValidateCallbackTime));
             AddDialog(new TextPrompt($"{nameof(BugReportDialog)}.phoneNumber", ValidatePhoneNumber));
@@ -53,8 +55,17 @@ namespace DialogBot.Dialogs
             InitialDialogId = $"{nameof(BugReportDialog)}.mainFlow";
         }
 
+        private static async Task<DialogTurnResult> TitleStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var promptOptions = new PromptOptions { Prompt = MessageFactory.Text("Enter a Title") };
+            return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.title", promptOptions, cancellationToken);
+        }
+
         private static async Task<DialogTurnResult> DescriptionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            // Save description value from previous step (FoundChoice)
+            stepContext.Values["title"] = (string)stepContext.Result;
+
             var promptOptions = new PromptOptions { Prompt = MessageFactory.Text("Enter a description of your report") };
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.description", promptOptions, cancellationToken);
         }
@@ -142,6 +153,7 @@ namespace DialogBot.Dialogs
             // Save all the collected data to user profile
             var bugReport = new BugReport
             {
+                Title = (string)stepContext.Values["title"],
                 Description = (string)stepContext.Values["description"],
                 CallbackTime = (DateTime)stepContext.Values["callbackTime"],
                 PhoneNumber = (string)stepContext.Values["phoneNumber"],
@@ -180,7 +192,7 @@ namespace DialogBot.Dialogs
             // Serializable object as template data
             var cardData = new
             {
-                title = " 🚨 Report Summary 🚨",
+                title = actualBugReport.Title,
                 description = actualBugReport.Description,
                 properties = new[]
                 {
