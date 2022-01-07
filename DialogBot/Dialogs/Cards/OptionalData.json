@@ -1,0 +1,34 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.3",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Comments",
+      "wrap": true
+    },
+    {
+      "type": "Input.Text",
+      "isMultiline": true,
+      "id": "comment"
+    },
+    
+    {
+      "type": "TextBlock",
+      "text": "Due Date",
+      "wrap": true
+    },
+    {
+      "type": "Input.Date",
+      "id": "dueDate",
+      "value": "{{DATE(formatDateTime(utcNow(), 'yyyy-MM-ddTHH:mm:ssZ'))}}"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Submit"
+    }
+  ]
+}

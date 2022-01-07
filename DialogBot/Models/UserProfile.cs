@@ -9,5 +9,7 @@ namespace DialogBot.Models
         public DateTime CallbackTime { get; set; }
         public string   PhoneNumber  { get; set; }
         public string   Bug          { get; set; }
+        public string   Comment      { get; set; }
+        public DateTime DueDate      { get; set; }
     }
 }

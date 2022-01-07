@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace DialogBot.Bots
 {
@@ -34,6 +35,13 @@ namespace DialogBot.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            var activity = turnContext.Activity;
+
+            if (string.IsNullOrWhiteSpace(activity.Text) && activity.Value != null)
+            {
+                activity.Text = JsonConvert.SerializeObject(activity.Value);
+            }
+
             _logger.LogInformation("Running dialog with Message Activity.");
 
             // Run the dialog with the new message activity

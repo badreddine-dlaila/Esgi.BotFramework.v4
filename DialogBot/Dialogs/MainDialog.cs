@@ -35,7 +35,7 @@ namespace DialogBot.Dialogs
             InitialDialogId = $"{nameof(MainDialog)}.mainFlow";
         }
 
-        private static async Task<DialogTurnResult> InitialStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private  static async Task<DialogTurnResult> InitialStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             if (Regex.Match(stepContext.Context.Activity.Text.ToLower(), "hi").Success)
                 return await stepContext.BeginDialogAsync($"{nameof(MainDialog)}.greeting", null, cancellationToken);
