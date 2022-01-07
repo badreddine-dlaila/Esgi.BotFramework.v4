@@ -59,6 +59,151 @@
           "value": "${value}"
         }
       ]
+    },
+    {
+      "type": "Container",
+      "spacing": "Large",
+      "style": "compact",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "weight": "Bolder",
+                  "text": "CORRELATION",
+                  "wrap": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "weight": "Bolder",
+                  "text": "DATE",
+                  "wrap": true
+                }
+              ]
+            },
+            {
+              "type": "Column",
+              "width": "auto",
+              "spacing": "Large",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "weight": "Bolder",
+                  "text": "CATEGORY",
+                  "wrap": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "bleed": true
+    },
+    {
+      "$data": "${reports}",
+      "type": "Container",
+      "items": [
+        {
+          "type": "ColumnSet",
+          "columns": [
+            {
+              "type": "Column",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${correlation_id}",
+                  "wrap": true
+                }
+              ],
+              "width": "auto"
+            },
+            {
+              "type": "Column",
+              "spacing": "Medium",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${formatDateTime(creation_date, 'dd-MM-yyyy')}",
+                  "wrap": true
+                }
+              ],
+              "width": "stretch"
+            },
+            {
+              "type": "Column",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "${bug}",
+                  "wrap": true
+                }
+              ],
+              "width": "auto"
+            },
+            {
+              "type": "Column",
+              "spacing": "Small",
+              "selectAction": {
+                "type": "Action.ToggleVisibility",
+                "targetElements": [
+                  "cardContent${$index}",
+                  "chevronDown${$index}",
+                  "chevronUp${$index}"
+                ]
+              },
+              "verticalContentAlignment": "Center",
+              "items": [
+                {
+                  "type": "Image",
+                  "id": "chevronDown${$index}",
+                  "url": "https://adaptivecards.io/content/down.png",
+                  "width": "20px",
+                  "altText": "${description} $${total} collapsed"
+                },
+                {
+                  "type": "Image",
+                  "id": "chevronUp${$index}",
+                  "url": "https://adaptivecards.io/content/up.png",
+                  "width": "20px",
+                  "altText": "${description} $${total} expanded",
+                  "isVisible": false
+                }
+              ],
+              "width": "auto"
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "id": "cardContent${$index}",
+          "isVisible": false,
+          "items": [
+            {
+              "type": "Container",
+              "items": [
+                {
+                  "$data": "${custom_fields}",
+                  "type": "TextBlock",
+                  "text": "* ${value}",
+                  "isSubtle": true,
+                  "wrap": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",

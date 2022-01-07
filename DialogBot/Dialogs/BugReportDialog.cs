@@ -139,21 +139,24 @@ namespace DialogBot.Dialogs
             // Get the current profile from user state
             var userProfile = await _botStateService.UserProfileAccessor.GetAsync(stepContext.Context, () => new UserProfile(), cancellationToken);
 
-            // Save all the collected data inside user profile
-            userProfile.Description = (string)stepContext.Values["description"];
-            userProfile.CallbackTime = (DateTime)stepContext.Values["callbackTime"];
-            userProfile.PhoneNumber = (string)stepContext.Values["phoneNumber"];
-            userProfile.Bug = (string)stepContext.Values["bug"];
-
-            userProfile.CorrelationId = (string)stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}";
-            userProfile.ObservationDate = stepContext.Values.ContainsKey("observationDate")
-                ? (DateTime)stepContext.Values["observationDate"]
-                : DateTime.UtcNow;
+            // Save all the collected data to user profile
+            var bugReport = new BugReport
+            {
+                Description = (string)stepContext.Values["description"],
+                CallbackTime = (DateTime)stepContext.Values["callbackTime"],
+                PhoneNumber = (string)stepContext.Values["phoneNumber"],
+                Bug = (string)stepContext.Values["bug"],
+                CorrelationId = (string)stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}",
+                ObservationDate = stepContext.Values.ContainsKey("observationDate")
+                    ? (DateTime)stepContext.Values["observationDate"]
+                    : DateTime.UtcNow
+            };
+            var bugReportId = userProfile.PushBugReport(bugReport);
 
             // Save profile in user state
             await _botStateService.UserProfileAccessor.SetAsync(stepContext.Context, userProfile, cancellationToken);
 
-            var cardJson = await GetSummaryCardJson(userProfile);
+            var cardJson = await GetSummaryCardJson(userProfile, bugReportId);
             var adaptiveCardAttachment = new Attachment
             {
                 ContentType = AdaptiveCard.ContentType,
@@ -166,8 +169,9 @@ namespace DialogBot.Dialogs
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
-        private static async Task<string> GetSummaryCardJson(UserProfile userProfile)
+        private static async Task<string> GetSummaryCardJson(UserProfile userProfile, Guid bugReportId)
         {
+            var actualBugReport = userProfile.BugReports.First(report => report.Id == bugReportId);
             // Create a Template instance from the template payload
             using var streamReader = new StreamReader(@"Dialogs\Cards\SummaryCard.json");
             var summaryCardTemplateJson = await streamReader.ReadToEndAsync();
@@ -177,7 +181,55 @@ namespace DialogBot.Dialogs
             var cardData = new
             {
                 title = " 🚨 Report Summary 🚨",
-                description = userProfile.Description,
+                description = actualBugReport.Description,
+                properties = new[]
+                {
+                    new
+                    {
+                        key = "Callback Time",
+                        value = $"{actualBugReport.CallbackTime.ToUniversalTime():s}Z"
+                    },
+                    new
+                    {
+                        key = "Phone Number" ,
+                        value = actualBugReport.PhoneNumber
+                    },
+                    new
+                    {
+                        key = "Bug",
+                        value = actualBugReport.Bug
+                    },
+                    new
+                    {
+                        key = "Observation Date",
+                        value = $"{actualBugReport.ObservationDate.ToUniversalTime():s}Z"
+                    },
+                    new
+                    {
+                        key = "Correlation ID",
+                        value = actualBugReport.CorrelationId
+                    }
+                },
+                reports = userProfile.BugReports.Select(report =>
+                    new
+                    {
+                        correlation_id = report.CorrelationId,
+                        creation_date = $"{report.DateTime.ToUniversalTime():s}Z",
+                        bug = report.Bug,
+                        custom_fields = new []
+                        {
+                            new
+                            {
+                                customfield_id = "16367000000277001",
+                                value = $"Created by **{userProfile.Name}** with callback number  : **{report.PhoneNumber}**"
+                            },
+                            new
+                            {
+                                customfield_id = "16367000000277001",
+                                value = $"Severity **{report.Bug}** reported at {report.ObservationDate:R}"
+                            }
+                        }
+                    }),
                 creator = new
                 {
                     name = userProfile.Name,
@@ -185,34 +237,6 @@ namespace DialogBot.Dialogs
                 },
                 createdUtc = DateTime.UtcNow,
                 viewUrl = "https://github.com/hankhank10/fakeface",
-                properties = new[]
-                {
-                    new
-                    {
-                        key = "Callback Time",
-                        value = $"{userProfile.CallbackTime.ToUniversalTime():s}Z"
-                    },
-                    new
-                    {
-                        key = "Phone Number" ,
-                        value = userProfile.PhoneNumber
-                    },
-                    new
-                    {
-                        key = "Bug",
-                        value = userProfile.Bug
-                    },
-                    new
-                    {
-                        key = "Observation Date",
-                        value = $"{userProfile.ObservationDate.ToUniversalTime():s}Z"
-                    },
-                    new
-                    {
-                        key = "Correlation ID",
-                        value = userProfile.CorrelationId
-                    }
-                }
             };
 
             // "Expand" the template - this generates the final Adaptive Card payload
