@@ -35,14 +35,11 @@ namespace DialogBot.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var activity = turnContext.Activity;
-
-            if (string.IsNullOrWhiteSpace(activity.Text) && activity.Value != null)
-            {
-                activity.Text = JsonConvert.SerializeObject(activity.Value);
-            }
-
             _logger.LogInformation("Running dialog with Message Activity.");
+
+            var activity = turnContext.Activity;
+            if (string.IsNullOrWhiteSpace(activity.Text) && activity.Value != null)
+                activity.Text = JsonConvert.SerializeObject(activity.Value);
 
             // Run the dialog with the new message activity
             await _dialog.Run(turnContext, _stateService.DialogStateAccessor, cancellationToken);

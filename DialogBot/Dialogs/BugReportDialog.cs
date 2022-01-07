@@ -14,7 +14,6 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace DialogBot.Dialogs
 {
@@ -113,9 +112,9 @@ namespace DialogBot.Dialogs
 
             using var streamReader = new StreamReader(@"Dialogs\Cards\OptionalData.json");
             var cardJson = await streamReader.ReadToEndAsync();
-            var cardAttachment = new Attachment()
+            var cardAttachment = new Attachment
             {
-                ContentType = "application/vnd.microsoft.card.adaptive",
+                ContentType = AdaptiveCard.ContentType,
                 Content = JsonConvert.DeserializeObject(cardJson),
             };
             var message = MessageFactory.Text("");
@@ -132,8 +131,10 @@ namespace DialogBot.Dialogs
         private async Task<DialogTurnResult> SummaryStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             // Save description value from previous step 
-            stepContext.Values["comment"] = ((dynamic)JsonConvert.DeserializeObject(stepContext.Result.ToString() ?? string.Empty))?.comment.ToString();
-            stepContext.Values["dueDate"] = Convert.ToDateTime(((dynamic)JsonConvert.DeserializeObject(stepContext.Result.ToString() ?? string.Empty))?.dueDate);
+            var dynamicResult = (dynamic)JsonConvert.DeserializeObject(stepContext.Result.ToString() ?? string.Empty);
+            stepContext.Values["correlationId"] = dynamicResult?.correlationId?.ToString();
+            if (PropertyExist(dynamicResult, "observationDate"))
+                stepContext.Values["observationDate"] = Convert.ToDateTime(dynamicResult?.observationDate);
 
             // Get the current profile from user state
             var userProfile = await _botStateService.UserProfileAccessor.GetAsync(stepContext.Context, () => new UserProfile(), cancellationToken);
@@ -143,8 +144,11 @@ namespace DialogBot.Dialogs
             userProfile.CallbackTime = (DateTime)stepContext.Values["callbackTime"];
             userProfile.PhoneNumber = (string)stepContext.Values["phoneNumber"];
             userProfile.Bug = (string)stepContext.Values["bug"];
-            userProfile.Comment = (string)stepContext.Values["comment"];
-            userProfile.DueDate = (DateTime)stepContext.Values["dueDate"];
+
+            userProfile.CorrelationId = (string)stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}";
+            userProfile.ObservationDate = stepContext.Values.ContainsKey("observationDate")
+                ? (DateTime)stepContext.Values["observationDate"]
+                : DateTime.UtcNow;
 
             // Save profile in user state
             await _botStateService.UserProfileAccessor.SetAsync(stepContext.Context, userProfile, cancellationToken);
@@ -200,13 +204,13 @@ namespace DialogBot.Dialogs
                     },
                     new
                     {
-                        key = "Due date",
-                        value = $"{userProfile.DueDate.ToUniversalTime():s}Z"
+                        key = "Observation Date",
+                        value = $"{userProfile.ObservationDate.ToUniversalTime():s}Z"
                     },
                     new
                     {
-                        key = "Comment",
-                        value = userProfile.Comment
+                        key = "Correlation ID",
+                        value = userProfile.CorrelationId
                     }
                 }
             };
@@ -236,6 +240,11 @@ namespace DialogBot.Dialogs
 
             var pattern = new Regex(@"^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$");
             return Task.FromResult(pattern.Match(promptContext.Recognized.Value).Success);
+        }
+
+        public static bool PropertyExist(dynamic obj, string property)
+        {
+            return ((Type)obj.GetType()).GetProperties().Any(p => p.Name.Equals(property));
         }
     }
 }

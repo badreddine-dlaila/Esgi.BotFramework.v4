@@ -5,23 +5,23 @@
   "body": [
     {
       "type": "TextBlock",
-      "text": "Comments",
+      "text": "Correlation ID",
       "wrap": true
     },
     {
       "type": "Input.Text",
-      "isMultiline": true,
-      "id": "comment"
+      "isMultiline": false,
+      "id": "correlationId"
     },
     
     {
       "type": "TextBlock",
-      "text": "Due Date",
+      "text": "Observation Date",
       "wrap": true
     },
     {
       "type": "Input.Date",
-      "id": "dueDate",
+      "id": "observationDate",
       "value": "{{DATE(formatDateTime(utcNow(), 'yyyy-MM-ddTHH:mm:ssZ'))}}"
     }
   ],
