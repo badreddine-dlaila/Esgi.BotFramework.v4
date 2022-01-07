@@ -69,12 +69,12 @@ namespace DialogBot
         private void ConfigureState(IServiceCollection services)
         {
             // Create the storage we'll be using for User and Conversation state.(Memory is great for testing purposes)
-            // services.AddSingleton<IStorage, MemoryStorage>();
+            services.AddSingleton<IStorage, MemoryStorage>();
             // For production and permanent storage we can use Azure blob storage as IStorageProvider
-            var connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
-            const string container = "mystatedata";
-            var blobsStorage = new BlobsStorage(connectionString, container);
-            services.AddSingleton<IStorage>(blobsStorage);
+            //var connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
+            //const string container = "mystatedata";
+            //var blobsStorage = new BlobsStorage(connectionString, container);
+            //services.AddSingleton<IStorage>(blobsStorage);
 
             // User state 
             services.AddSingleton<UserState>();
