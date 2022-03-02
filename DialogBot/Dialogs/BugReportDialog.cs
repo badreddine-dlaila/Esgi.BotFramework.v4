@@ -44,7 +44,7 @@ namespace DialogBot.Dialogs
                 SummaryStep         // TextPrompt
             };
 
-            // Add named dialogs$
+            // Add named dialogs
             AddDialog(new WaterfallDialog($"{nameof(BugReportDialog)}.mainFlow", waterFallSteps));
             AddDialog(new TextPrompt($"{nameof(BugReportDialog)}.title"));
             AddDialog(new TextPrompt($"{nameof(BugReportDialog)}.description"));
