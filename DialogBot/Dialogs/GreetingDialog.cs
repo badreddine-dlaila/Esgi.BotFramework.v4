@@ -25,7 +25,7 @@ namespace DialogBot.Dialogs
             // Create waterfall steps (waterfall = back and forth template to utilize for conversation)
             var waterfallSteps = new WaterfallStep[]
             {
-                InitialStep , // <-- waterfall step (method order is important)
+                InitialStep, // <-- waterfall step (method order is important)
                 FinalStep
             };
 
@@ -60,7 +60,7 @@ namespace DialogBot.Dialogs
             if (string.IsNullOrEmpty(userProfile.Name))
             {
                 // Set the name
-                userProfile.Name = (string)stepContext.Result;
+                userProfile.Name = (string) stepContext.Result;
 
                 // Save any changes that might have occurred during the run
                 await _botStateService.UserProfileAccessor.SetAsync(stepContext.Context, userProfile, cancellationToken);

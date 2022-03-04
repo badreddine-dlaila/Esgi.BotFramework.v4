@@ -1,7 +1,7 @@
-﻿using System;
-using DialogBot.Models;
+﻿using DialogBot.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using System;
 
 namespace DialogBot.Services
 {

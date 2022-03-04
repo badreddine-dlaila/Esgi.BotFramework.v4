@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using AdaptiveCards;
+﻿using AdaptiveCards;
 using AdaptiveCards.Templating;
 using DialogBot.Models;
 using DialogBot.Services;
@@ -16,6 +7,15 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DialogBot.Dialogs
 {
@@ -35,13 +35,13 @@ namespace DialogBot.Dialogs
             // Create waterfall steps
             var waterFallSteps = new WaterfallStep[]
             {
-                TitleStep,          // TextPrompt
-                DescriptionStep,    // TextPrompt
-                CallbackStep,       // DateTimePrompt 🚨
-                PhoneNumberStep,    // TextPrompt https://regex101.com/r/0kpBet/1 🚨
-                BugStep,            // ChoicePrompt 🚨
-                OptionalDataStep,   // ChoicePrompt 🚨
-                SummaryStep         // TextPrompt
+                TitleStep,        // TextPrompt
+                DescriptionStep,  // TextPrompt
+                CallbackStep,     // DateTimePrompt 🚨
+                PhoneNumberStep,  // TextPrompt https://regex101.com/r/0kpBet/1 🚨
+                BugStep,          // ChoicePrompt 🚨
+                OptionalDataStep, // ChoicePrompt 🚨
+                SummaryStep       // TextPrompt
             };
 
             // Add named dialogs
@@ -66,62 +66,91 @@ namespace DialogBot.Dialogs
         private static async Task<DialogTurnResult> DescriptionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             // Save description value from previous step (FoundChoice)
-            stepContext.Values["title"] = (string)stepContext.Result;
+            stepContext.Values["title"] = (string) stepContext.Result;
+            var userProfile = (UserProfile) stepContext.Options;
 
-            var promptOptions = new PromptOptions { Prompt = MessageFactory.Text("Enter a description of your report") };
+            if (!string.IsNullOrEmpty(userProfile.Description))
+                return await stepContext.NextAsync(userProfile.Description, cancellationToken);
+
+            var promptOptions = new PromptOptions { Prompt = MessageFactory.Text("Enter a description for your report") };
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.description", promptOptions, cancellationToken);
         }
 
         private static async Task<DialogTurnResult> CallbackStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            // Save description value from previous step to the object stepContext.
-            // Step context is a bag that is alive for the entirety of your waterfall flow.
-            // It's kind of a place to store information for the time period of that flow only.
+            var userProfile = (UserProfile) stepContext.Options;
+
             stepContext.Values["description"] = (string)stepContext.Result;
+            if (userProfile.CallbackTime != null)
+                return await stepContext.NextAsync(userProfile.CallbackTime, cancellationToken);
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please specify a callback time (8AM - 6PM)"),
-                RetryPrompt = MessageFactory.Text("The value entered must be between 8AM and 6PM", inputHint: "10:00")
+                Prompt      = MessageFactory.Text("Please enter in a callback time"),
+                RetryPrompt = MessageFactory.Text("The value entered must be between the hours of 9 am and 5 pm.")
             };
+
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.callbackTime", promptOptions, cancellationToken);
         }
 
         private static async Task<DialogTurnResult> PhoneNumberStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            // Some date‑time magic to take that data from the previous step
-            stepContext.Values["callbackTime"] = Convert.ToDateTime(((List<DateTimeResolution>)stepContext.Result).FirstOrDefault()?.Value);
+            var userProfile = (UserProfile) stepContext.Options;
+
+            if (stepContext.Result is DateTime time)
+                stepContext.Values["callbackTime"] = time;
+            else
+            {
+                var result = (List<DateTimeResolution>) stepContext.Result;
+                stepContext.Values["callbackTime"] = result?.FirstOrDefault() != null ? Convert.ToDateTime(result?.FirstOrDefault()?.Value) : null;
+            }
+
+            if (!string.IsNullOrEmpty(userProfile.PhoneNumber))
+                return await stepContext.NextAsync(userProfile.PhoneNumber, cancellationToken);
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter a phone number that we can call you back at"),
-                RetryPrompt = MessageFactory.Text("Please enter a valid phone number", inputHint: "0654621418")
+                Prompt      = MessageFactory.Text("Please enter in a phone number that we can call you back at"),
+                RetryPrompt = MessageFactory.Text("Please enter a valid phone number")
             };
+
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.phoneNumber", promptOptions, cancellationToken);
         }
 
         private static async Task<DialogTurnResult> BugStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            var userProfile = (UserProfile) stepContext.Options;
+
             stepContext.Values["phoneNumber"] = (string)stepContext.Result;
+
+            if (!string.IsNullOrEmpty(userProfile.Bug))
+                return await stepContext.NextAsync(userProfile.Bug, cancellationToken);
+
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter the bug type"),
+                Prompt = MessageFactory.Text("Please enter the type of bug."),
                 Choices = ChoiceFactory.ToChoices(new List<string>
                 {
                     "Security",
                     "Crash",
+                    "Power",
                     "Performance",
-                    "Critical Bug",
-                    "Test"
+                    "Usability",
+                    "Serious Bug",
+                    "Other"
                 })
             };
+
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.bug", promptOptions, cancellationToken);
         }
 
         private static async Task<DialogTurnResult> OptionalDataStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             // Save description value from previous step (FoundChoice)
-            stepContext.Values["bug"] = ((FoundChoice)stepContext.Result).Value;
+            if (stepContext.Result is string bug)
+                stepContext.Values["bug"] = bug;
+            else
+                stepContext.Values["bug"] = ((FoundChoice) stepContext.Result).Value;
 
             using var streamReader = new StreamReader(@"Dialogs\Cards\OptionalData.json");
             var cardJson = await streamReader.ReadToEndAsync();
@@ -131,7 +160,7 @@ namespace DialogBot.Dialogs
                 Content = JsonConvert.DeserializeObject(cardJson),
             };
             var message = MessageFactory.Text("");
-            message.Attachments = new List<Attachment>() { cardAttachment };
+            message.Attachments = new List<Attachment> { cardAttachment };
             await stepContext.Context.SendActivityAsync(message, cancellationToken);
 
             // Create the text prompt
@@ -155,14 +184,14 @@ namespace DialogBot.Dialogs
             // Save all the collected data to user profile
             var bugReport = new BugReport
             {
-                Title = (string)stepContext.Values["title"],
-                Description = (string)stepContext.Values["description"],
-                CallbackTime = (DateTime)stepContext.Values["callbackTime"],
-                PhoneNumber = (string)stepContext.Values["phoneNumber"],
-                Bug = (string)stepContext.Values["bug"],
-                CorrelationId = (string)stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}",
+                Title         = (string) stepContext.Values["title"],
+                Description   = (string) stepContext.Values["description"],
+                CallbackTime  = (DateTime) stepContext.Values["callbackTime"],
+                PhoneNumber   = (string) stepContext.Values["phoneNumber"],
+                Bug           = (string) stepContext.Values["bug"],
+                CorrelationId = (string) stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}",
                 ObservationDate = stepContext.Values.ContainsKey("observationDate")
-                    ? (DateTime)stepContext.Values["observationDate"]
+                    ? (DateTime) stepContext.Values["observationDate"]
                     : DateTime.UtcNow
             };
             var bugReportId = userProfile.PushBugReport(bugReport);
@@ -200,63 +229,63 @@ namespace DialogBot.Dialogs
             // Serializable object as template data
             var cardData = new
             {
-                title = actualBugReport.Title,
+                title       = actualBugReport.Title,
                 description = actualBugReport.Description,
                 properties = new[]
                 {
                     new
                     {
-                        key = "Callback Time",
+                        key   = "Callback Time",
                         value = $"{actualBugReport.CallbackTime.ToUniversalTime():s}Z"
                     },
                     new
                     {
-                        key = "Phone Number" ,
+                        key   = "Phone Number",
                         value = actualBugReport.PhoneNumber
                     },
                     new
                     {
-                        key = "Bug",
+                        key   = "Bug",
                         value = actualBugReport.Bug
                     },
                     new
                     {
-                        key = "Observation Date",
+                        key   = "Observation Date",
                         value = $"{actualBugReport.ObservationDate.ToUniversalTime():s}Z"
                     },
                     new
                     {
-                        key = "Correlation ID",
+                        key   = "Correlation ID",
                         value = actualBugReport.CorrelationId
                     }
                 },
                 reports = userProfile.BugReports.Select(report =>
-                    new
-                    {
-                        correlation_id = report.CorrelationId,
-                        creation_date = $"{report.DateTime.ToUniversalTime():s}Z",
-                        bug = report.Bug,
-                        custom_fields = new []
-                        {
-                            new
-                            {
-                                customfield_id = "16367000000277001",
-                                value = $"Created by **{userProfile.Name}** with callback number  : **{report.PhoneNumber}**"
-                            },
-                            new
-                            {
-                                customfield_id = "16367000000277001",
-                                value = $"Severity **{report.Bug}** reported at {report.ObservationDate:R}"
-                            }
-                        }
-                    }),
+                                                            new
+                                                            {
+                                                                correlation_id = report.CorrelationId,
+                                                                creation_date  = $"{report.DateTime.ToUniversalTime():s}Z",
+                                                                bug            = report.Bug,
+                                                                custom_fields = new[]
+                                                                {
+                                                                    new
+                                                                    {
+                                                                        customfield_id = "16367000000277001",
+                                                                        value          = $"Created by **{userProfile.Name}** with callback number  : **{report.PhoneNumber}**"
+                                                                    },
+                                                                    new
+                                                                    {
+                                                                        customfield_id = "16367000000277001",
+                                                                        value          = $"Severity **{report.Bug}** reported at {report.ObservationDate:R}"
+                                                                    }
+                                                                }
+                                                            }),
                 creator = new
                 {
-                    name = userProfile.Name,
+                    name         = userProfile.Name,
                     profileImage = $"https://www.gravatar.com/avatar/{hash}?d=retro"
                 },
                 createdUtc = DateTime.UtcNow,
-                viewUrl = "https://github.com/hankhank10/fakeface",
+                viewUrl    = "https://github.com/hankhank10/fakeface"
             };
 
             // "Expand" the template - this generates the final Adaptive Card payload

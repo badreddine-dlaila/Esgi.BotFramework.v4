@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloBot", "HelloBot\HelloBot.csproj", "{0BE1223E-4B7E-4AB7-A984-CF9246EE76D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloBot", "HelloBot\HelloBot.csproj", "{0BE1223E-4B7E-4AB7-A984-CF9246EE76D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogBot", "DialogBot\DialogBot.csproj", "{35D8EE6E-B5BF-4183-BEF8-4756DC0C5001}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogBot", "DialogBot\DialogBot.csproj", "{35D8EE6E-B5BF-4183-BEF8-4756DC0C5001}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

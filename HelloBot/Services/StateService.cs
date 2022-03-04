@@ -1,22 +1,22 @@
-﻿using System;
-using HelloBot.Models;
+﻿using HelloBot.Models;
 using Microsoft.Bot.Builder;
+using System;
 
 namespace HelloBot.Services
 {
     public class StateService
     {
         // State variables
-        public UserState         UserState         { get; set; }
+        public UserState UserState { get; set; }
         public ConversationState ConversationState { get; set; }
 
         // IDs
         // Identifies user profile data inside UserState bucket
-        public static string UserProfileId      => $"{nameof(StateService)}.{nameof(UserProfile)}";
+        public static string UserProfileId => $"{nameof(StateService)}.{nameof(UserProfile)}";
         public static string ConversationDataId => $"{nameof(StateService)}.{nameof(ConversationData)}";
 
         // Accessors
-        public IStatePropertyAccessor<UserProfile>      UserProfileAccessor      { get; set; }
+        public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; set; }
         public IStatePropertyAccessor<ConversationData> ConversationDataAccessor { get; set; }
 
         public StateService(UserState userState, ConversationState conversationState)

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using HelloBot.Models;
+﻿using HelloBot.Models;
 using HelloBot.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HelloBot.Bots
 {
@@ -28,16 +28,14 @@ namespace HelloBot.Bots
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
-                {
                     await GetName(turnContext, cancellationToken);
-                }
             }
         }
 
         private async Task GetName(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             // Retrieve or instantiate UserProfile from UserState   
-            var userProfile = await _stateService.UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
+            var userProfile      = await _stateService.UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
             var conversationData = await _stateService.ConversationDataAccessor.GetAsync(turnContext, () => new ConversationData(), cancellationToken);
 
             if (!string.IsNullOrEmpty(userProfile.Name))

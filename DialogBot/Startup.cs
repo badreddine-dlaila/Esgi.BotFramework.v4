@@ -3,8 +3,8 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.15.0
 
-using DialogBot.Dialogs;
 using DialogBot.Bots;
+using DialogBot.Dialogs;
 using DialogBot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -38,6 +38,8 @@ namespace DialogBot
             // Create the Bot Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
+            services.AddSingleton<BotServices>();
+
             ConfigureState(services);
             ConfigureDialogs(services);
 
@@ -69,12 +71,12 @@ namespace DialogBot
         private void ConfigureState(IServiceCollection services)
         {
             // Create the storage we'll be using for User and Conversation state.(Memory is great for testing purposes)
-            services.AddSingleton<IStorage, MemoryStorage>();
+            //services.AddSingleton<IStorage, MemoryStorage>();
             // For production and permanent storage we can use Azure blob storage as IStorageProvider
-            //var connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
-            //const string container = "mystatedata";
-            //var blobsStorage = new BlobsStorage(connectionString, container);
-            //services.AddSingleton<IStorage>(blobsStorage);
+            var connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
+            const string container = "mystatedata";
+            var blobsStorage = new BlobsStorage(connectionString, container);
+            services.AddSingleton<IStorage>(blobsStorage);
 
             // User state 
             services.AddSingleton<UserState>();

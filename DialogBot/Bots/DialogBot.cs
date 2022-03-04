@@ -1,13 +1,13 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using DialogBot.Helpers;
+﻿using DialogBot.Helpers;
 using DialogBot.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DialogBot.Bots
 {

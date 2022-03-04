@@ -15,7 +15,7 @@ namespace DialogBot.Helpers
             // create dialogContext to interact with dialogSet
             // dialog context include : current TurnContext, Parent dialog & dialog (provides a method for preserving information within a dialog)
             var dialogContext = await dialogSet.CreateContextAsync(turnContext, cancellationToken);
-            var result = await dialogContext.ContinueDialogAsync(cancellationToken);
+            var result        = await dialogContext.ContinueDialogAsync(cancellationToken);
 
             if (result.Status == DialogTurnStatus.Empty)
                 // dialogContext allows to start a dialog by id or continue the current dialog depending on the use case
