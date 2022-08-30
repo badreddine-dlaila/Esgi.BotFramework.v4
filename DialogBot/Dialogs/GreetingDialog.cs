@@ -27,8 +27,8 @@ namespace DialogBot.Dialogs
             // Create waterfall steps (waterfall = back and forth template to utilize for conversation)
             var waterfallSteps = new WaterfallStep[]
             {
-                InitialStep ,       // <-- waterfall step (method order is important)
-                //GithubSignInStep,
+                InitialStep, // <-- waterfall step (method order is important)
+                GithubSignInStep,
                 FinalStep
             };
 
@@ -62,8 +62,8 @@ namespace DialogBot.Dialogs
                                       "&redirect_uri=https://localhost:3979/api/oauth/callback";
             var signinCard = new SigninCard
             {
-                Text = "Please sign-in to Github 🤖",
-                Buttons = new List<CardAction> { new (ActionTypes.Signin, "Sign-in", value: signinLink) },
+                Text    = "Please sign-in to Github 🤖",
+                Buttons = new List<CardAction> { new(ActionTypes.Signin, "Sign-in", value: signinLink) }
             };
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(signinCard.ToAttachment()), cancellationToken);

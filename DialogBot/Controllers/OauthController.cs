@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -17,20 +18,26 @@ namespace DialogBot.Controllers
 
         public OauthController(IBotFrameworkHttpAdapter adapter, ConcurrentDictionary<string, ConversationReference> conversationReferences)
         {
-            _adapter = adapter;
+            _adapter                = adapter;
             _conversationReferences = conversationReferences;
         }
 
         [HttpGet("callback")]
-        public async Task<string> Callback(string code)
+        public async Task<IActionResult> Callback(string code)
         {
             foreach (var conversationReference in _conversationReferences.Values)
             {
-                Task BotCallbackHandler(ITurnContext context, CancellationToken token) => context.SendActivityAsync(code, cancellationToken: token);
-                await ((BotAdapter)_adapter).ContinueConversationAsync(string.Empty, conversationReference, BotCallbackHandler, default);
+                async Task BotCallbackHandler(ITurnContext context, CancellationToken token) => await context.SendActivityAsync(code, cancellationToken: token);
+                await ((BotAdapter)_adapter).ContinueConversationAsync(conversationReference.Bot.Id, conversationReference, BotCallbackHandler, default);
             }
 
-            return await Task.FromResult(code);
+            // Let the caller know proactive messages have been sent
+            return new ContentResult
+            {
+                Content     = $"<html><body><h1>{code}</h1></body></html>",
+                ContentType = "text/html",
+                StatusCode  = (int)HttpStatusCode.OK
+            };
         }
     }
 }
