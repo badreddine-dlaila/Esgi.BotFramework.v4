@@ -13,10 +13,7 @@ namespace HelloBot.Bots
     {
         private readonly StateService _stateService;
 
-        public GreetingBot(StateService stateService)
-        {
-            _stateService = stateService ?? throw new ArgumentNullException(nameof(stateService));
-        }
+        public GreetingBot(StateService stateService) => _stateService = stateService ?? throw new ArgumentNullException(nameof(stateService));
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
@@ -28,16 +25,14 @@ namespace HelloBot.Bots
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
-                {
                     await GetName(turnContext, cancellationToken);
-                }
             }
         }
 
         private async Task GetName(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             // Retrieve or instantiate UserProfile from UserState   
-            var userProfile = await _stateService.UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
+            var userProfile      = await _stateService.UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
             var conversationData = await _stateService.ConversationDataAccessor.GetAsync(turnContext, () => new ConversationData(), cancellationToken);
 
             if (!string.IsNullOrEmpty(userProfile.Name))

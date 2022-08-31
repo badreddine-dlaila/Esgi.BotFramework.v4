@@ -7,8 +7,8 @@ namespace HelloBot.Services
     public class StateService
     {
         // State variables
-        public UserState         UserState         { get; set; }
-        public ConversationState ConversationState { get; set; }
+        public UserState         UserState         { get; }
+        public ConversationState ConversationState { get; }
 
         // IDs
         // Identifies user profile data inside UserState bucket
@@ -21,7 +21,7 @@ namespace HelloBot.Services
 
         public StateService(UserState userState, ConversationState conversationState)
         {
-            UserState = userState ?? throw new ArgumentException(nameof(userState));
+            UserState         = userState ?? throw new ArgumentException(nameof(userState));
             ConversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
 
             InitializeAccessors();
