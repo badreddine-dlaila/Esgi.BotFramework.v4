@@ -35,13 +35,13 @@ namespace DialogBot.Dialogs
             // Create waterfall steps
             var waterFallSteps = new WaterfallStep[]
             {
-                TitleStep,          // TextPrompt
-                DescriptionStep,    // TextPrompt
-                CallbackStep,       // DateTimePrompt 🚨
-                PhoneNumberStep,    // TextPrompt https://regex101.com/r/0kpBet/1 🚨
-                BugStep,            // ChoicePrompt 🚨
-                OptionalDataStep,   // ChoicePrompt 🚨
-                SummaryStep         // TextPrompt
+                TitleStep,        // TextPrompt
+                DescriptionStep,  // TextPrompt
+                CallbackStep,     // DateTimePrompt 🚨
+                PhoneNumberStep,  // TextPrompt https://regex101.com/r/0kpBet/1 🚨
+                BugStep,          // ChoicePrompt 🚨
+                OptionalDataStep, // ChoicePrompt 🚨
+                SummaryStep       // TextPrompt
             };
 
             // Add named dialogs
@@ -81,7 +81,7 @@ namespace DialogBot.Dialogs
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please specify a callback time (8AM - 6PM)"),
+                Prompt      = MessageFactory.Text("Please specify a callback time (8AM - 6PM)"),
                 RetryPrompt = MessageFactory.Text("The value entered must be between 8AM and 6PM", inputHint: "10:00")
             };
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.callbackTime", promptOptions, cancellationToken);
@@ -94,7 +94,7 @@ namespace DialogBot.Dialogs
 
             var promptOptions = new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter a phone number that we can call you back at"),
+                Prompt      = MessageFactory.Text("Please enter a phone number that we can call you back at"),
                 RetryPrompt = MessageFactory.Text("Please enter a valid phone number", inputHint: "0654621418")
             };
             return await stepContext.PromptAsync($"{nameof(BugReportDialog)}.phoneNumber", promptOptions, cancellationToken);
@@ -124,14 +124,14 @@ namespace DialogBot.Dialogs
             stepContext.Values["bug"] = ((FoundChoice)stepContext.Result).Value;
 
             using var streamReader = new StreamReader(@"Dialogs\Cards\OptionalData.json");
-            var cardJson = await streamReader.ReadToEndAsync();
+            var       cardJson     = await streamReader.ReadToEndAsync();
             var cardAttachment = new Attachment
             {
                 ContentType = AdaptiveCard.ContentType,
-                Content = JsonConvert.DeserializeObject(cardJson),
+                Content     = JsonConvert.DeserializeObject(cardJson)
             };
             var message = MessageFactory.Text("");
-            message.Attachments = new List<Attachment>() { cardAttachment };
+            message.Attachments = new List<Attachment> { cardAttachment };
             await stepContext.Context.SendActivityAsync(message, cancellationToken);
 
             // Create the text prompt
@@ -155,11 +155,11 @@ namespace DialogBot.Dialogs
             // Save all the collected data to user profile
             var bugReport = new BugReport
             {
-                Title = (string)stepContext.Values["title"],
-                Description = (string)stepContext.Values["description"],
-                CallbackTime = (DateTime)stepContext.Values["callbackTime"],
-                PhoneNumber = (string)stepContext.Values["phoneNumber"],
-                Bug = (string)stepContext.Values["bug"],
+                Title         = (string)stepContext.Values["title"],
+                Description   = (string)stepContext.Values["description"],
+                CallbackTime  = (DateTime)stepContext.Values["callbackTime"],
+                PhoneNumber   = (string)stepContext.Values["phoneNumber"],
+                Bug           = (string)stepContext.Values["bug"],
                 CorrelationId = (string)stepContext.Values["correlationId"] ?? $"(New) {Guid.NewGuid()}",
                 ObservationDate = stepContext.Values.ContainsKey("observationDate")
                     ? (DateTime)stepContext.Values["observationDate"]
@@ -174,7 +174,7 @@ namespace DialogBot.Dialogs
             var adaptiveCardAttachment = new Attachment
             {
                 ContentType = AdaptiveCard.ContentType,
-                Content = JsonConvert.DeserializeObject(cardJson)
+                Content     = JsonConvert.DeserializeObject(cardJson)
             };
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(adaptiveCardAttachment), cancellationToken);
@@ -187,76 +187,76 @@ namespace DialogBot.Dialogs
         {
             var actualBugReport = userProfile.BugReports.First(report => report.Id == bugReportId);
             // Create a Template instance from the template payload
-            using var streamReader = new StreamReader(@"Dialogs\Cards\SummaryCard.json");
-            var summaryCardTemplateJson = await streamReader.ReadToEndAsync();
-            var template = new AdaptiveCardTemplate(summaryCardTemplateJson);
+            using var streamReader            = new StreamReader(@"Dialogs\Cards\SummaryCard.json");
+            var       summaryCardTemplateJson = await streamReader.ReadToEndAsync();
+            var       template                = new AdaptiveCardTemplate(summaryCardTemplateJson);
 
             // Random md5
             using var md5 = MD5.Create();
             var hash = BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(userProfile.Name)))
-                .Replace("-", string.Empty)
-                .ToLower();
+                                   .Replace("-", string.Empty)
+                                   .ToLower();
 
             // Serializable object as template data
             var cardData = new
             {
-                title = actualBugReport.Title,
+                title       = actualBugReport.Title,
                 description = actualBugReport.Description,
                 properties = new[]
                 {
                     new
                     {
-                        key = "Callback Time",
+                        key   = "Callback Time",
                         value = $"{actualBugReport.CallbackTime.ToUniversalTime():s}Z"
                     },
                     new
                     {
-                        key = "Phone Number" ,
+                        key   = "Phone Number",
                         value = actualBugReport.PhoneNumber
                     },
                     new
                     {
-                        key = "Bug",
+                        key   = "Bug",
                         value = actualBugReport.Bug
                     },
                     new
                     {
-                        key = "Observation Date",
+                        key   = "Observation Date",
                         value = $"{actualBugReport.ObservationDate.ToUniversalTime():s}Z"
                     },
                     new
                     {
-                        key = "Correlation ID",
+                        key   = "Correlation ID",
                         value = actualBugReport.CorrelationId
                     }
                 },
                 reports = userProfile.BugReports.Select(report =>
-                    new
-                    {
-                        correlation_id = report.CorrelationId,
-                        creation_date = $"{report.DateTime.ToUniversalTime():s}Z",
-                        bug = report.Bug,
-                        custom_fields = new []
-                        {
-                            new
-                            {
-                                customfield_id = "16367000000277001",
-                                value = $"Created by **{userProfile.Name}** with callback number  : **{report.PhoneNumber}**"
-                            },
-                            new
-                            {
-                                customfield_id = "16367000000277001",
-                                value = $"Severity **{report.Bug}** reported at {report.ObservationDate:R}"
-                            }
-                        }
-                    }),
+                                                            new
+                                                            {
+                                                                correlation_id = report.CorrelationId,
+                                                                creation_date  = $"{report.DateTime.ToUniversalTime():s}Z",
+                                                                bug            = report.Bug,
+                                                                custom_fields = new[]
+                                                                {
+                                                                    new
+                                                                    {
+                                                                        customfield_id = "16367000000277001",
+                                                                        value          = $"Created by **{userProfile.Name}** with callback number  : **{report.PhoneNumber}**"
+                                                                    },
+                                                                    new
+                                                                    {
+                                                                        customfield_id = "16367000000277001",
+                                                                        value          = $"Severity **{report.Bug}** reported at {report.ObservationDate:R}"
+                                                                    }
+                                                                }
+                                                            }),
                 creator = new
                 {
-                    name = userProfile.Name,
+                    name         = userProfile.Name,
                     profileImage = $"https://www.gravatar.com/avatar/{hash}?d=retro"
                 },
                 createdUtc = DateTime.UtcNow,
-                viewUrl = "https://github.com/hankhank10/fakeface",
+                viewUrl    = "https://github.com/hankhank10/fakeface"
             };
 
             // "Expand" the template - this generates the final Adaptive Card payload
@@ -270,9 +270,9 @@ namespace DialogBot.Dialogs
             if (!promptContext.Recognized.Succeeded)
                 return Task.FromResult(false);
 
-            var resolution = promptContext.Recognized.Value.First();
+            var resolution       = promptContext.Recognized.Value.First();
             var selectedDateTime = Convert.ToDateTime(resolution.Value);
-            var isValid = selectedDateTime.TimeOfDay >= new TimeSpan(8, 0, 0) && selectedDateTime.TimeOfDay <= new TimeSpan(18, 0, 0);
+            var isValid          = selectedDateTime.TimeOfDay >= new TimeSpan(8, 0, 0) && selectedDateTime.TimeOfDay <= new TimeSpan(18, 0, 0);
 
             return Task.FromResult(isValid);
         }
